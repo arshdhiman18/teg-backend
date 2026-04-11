@@ -70,6 +70,21 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Keep-alive self-ping — prevents Render free tier from spinning down after 15 min inactivity.
+// RENDER_EXTERNAL_URL is automatically injected by Render for web services.
+if (process.env.RENDER_EXTERNAL_URL) {
+  const https = require('https');
+  const PING_URL = `${process.env.RENDER_EXTERNAL_URL}/health`;
+  setInterval(() => {
+    https.get(PING_URL, (res) => {
+      console.log(`🏓 Keep-alive ping → ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.error('Keep-alive ping failed:', err.message);
+    });
+  }, 14 * 60 * 1000); // every 14 minutes
+  console.log(`⏰ Keep-alive scheduled every 14 min → ${PING_URL}`);
+}
+
 // Connect to MongoDB and start server
 const startServer = async () => {
   try {
