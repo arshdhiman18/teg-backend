@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const sharp = require('sharp');
 const cloudinary = require('../config/cloudinary');
 const adminAuth = require('../middleware/auth');
 
@@ -19,17 +20,19 @@ const upload = multer({
   },
 });
 
+// Compress image before upload — resize to max 1200x900, quality 85
+const compressImage = async (buffer, mimetype) => {
+  const instance = sharp(buffer).resize({ width: 1200, height: 900, fit: 'inside', withoutEnlargement: true });
+  if (mimetype === 'image/png') return instance.png({ quality: 85 }).toBuffer();
+  if (mimetype === 'image/webp') return instance.webp({ quality: 85 }).toBuffer();
+  return instance.jpeg({ quality: 85 }).toBuffer();
+};
+
 // Helper to upload buffer to Cloudinary
-const uploadToCloudinary = (buffer, originalname) => {
+const uploadToCloudinary = (buffer) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: 'teg-events',
-        resource_type: 'image',
-        transformation: [
-          { width: 1200, height: 900, crop: 'limit', quality: 'auto:good' },
-        ],
-      },
+      { folder: 'teg-events', resource_type: 'image' },
       (error, result) => {
         if (error) reject(error);
         else resolve(result);
@@ -46,9 +49,10 @@ router.post('/', adminAuth, upload.array('images', 10), async (req, res) => {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
     }
 
-    const uploadPromises = req.files.map((file) =>
-      uploadToCloudinary(file.buffer, file.originalname)
-    );
+    const uploadPromises = req.files.map(async (file) => {
+      const compressed = await compressImage(file.buffer, file.mimetype);
+      return uploadToCloudinary(compressed);
+    });
 
     const results = await Promise.all(uploadPromises);
     const urls = results.map((result) => result.secure_url);
