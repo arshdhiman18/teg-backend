@@ -13,10 +13,24 @@ const productSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
+    section: {
+      type: String,
+      enum: ['Social & Home Celebrations', 'Signature Events'],
+    },
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['Birthday', 'Wedding', 'Anniversary', 'Corporate', 'Baby Shower', 'Engagement', 'Other'],
+      trim: true,
+    },
+    subCategory: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Unisex'],
+      default: 'Unisex',
     },
     price: {
       type: Number,
@@ -60,13 +74,11 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Auto-generate slug from title before saving
 productSchema.pre('save', async function (next) {
   if (this.isModified('title') || this.isNew) {
     let baseSlug = slugify(this.title, { lower: true, strict: true });
     let slug = baseSlug;
     let count = 0;
-    // Ensure uniqueness
     while (true) {
       const existing = await mongoose.model('Product').findOne({ slug, _id: { $ne: this._id } });
       if (!existing) break;
