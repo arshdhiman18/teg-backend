@@ -22,7 +22,7 @@ const upload = multer({
 
 // Compress image before upload — resize to max 1200x900, quality 85
 const compressImage = async (buffer, mimetype) => {
-  const instance = sharp(buffer).resize({ width: 1200, height: 900, fit: 'inside', withoutEnlargement: true });
+  const instance = sharp(buffer).rotate().resize({ width: 1200, height: 900, fit: 'inside', withoutEnlargement: true });
   if (mimetype === 'image/png') return instance.png({ quality: 85 }).toBuffer();
   if (mimetype === 'image/webp') return instance.webp({ quality: 85 }).toBuffer();
   return instance.jpeg({ quality: 85 }).toBuffer();
