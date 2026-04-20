@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const productRoutes = require('./routes/products');
 const uploadRoutes = require('./routes/upload');
 const seedRoutes = require('./routes/seed');
+const categoryRoutes = require('./routes/categories');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -55,6 +56,7 @@ app.get('/health', (req, res) => {
 app.use('/api/products', productRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // 404 handler
 app.use((req, res) => {
