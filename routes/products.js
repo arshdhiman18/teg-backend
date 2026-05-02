@@ -42,7 +42,7 @@ router.get('/', async (req, res) => {
     }
 
     const pageNum = parseInt(page) || 1;
-    const limitNum = parseInt(limit) || 100;
+    const limitNum = parseInt(limit) || 500;
     const skip = (pageNum - 1) * limitNum;
 
     const [products, total] = await Promise.all([
