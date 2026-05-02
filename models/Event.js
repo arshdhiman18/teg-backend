@@ -67,8 +67,17 @@ const eventSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, 'Price is required'],
+      default: 0,
       min: 0,
+    },
+    packages: {
+      type: [
+        {
+          label: { type: String, trim: true },
+          price: { type: Number, min: 0 },
+        },
+      ],
+      default: [],
     },
     tags: {
       type: [String],
