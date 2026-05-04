@@ -44,6 +44,35 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/events/promotional — must be before /:id
+router.get('/promotional', async (req, res) => {
+  try {
+    const event = await Event.findOne({ isPromotional: true });
+    res.json({ success: true, data: event || null });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PATCH /api/events/:id/promotional — admin sets/clears promo flag
+router.patch('/:id/promotional', adminAuth, async (req, res) => {
+  try {
+    const { active } = req.body;
+    if (active) {
+      await Event.updateMany({ isPromotional: true }, { isPromotional: false });
+    }
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { isPromotional: !!active },
+      { new: true }
+    );
+    if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
+    res.json({ success: true, data: event });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/events/:id
 router.get('/:id', async (req, res) => {
   try {
@@ -76,6 +105,9 @@ router.post('/', adminAuth, async (req, res) => {
 router.put('/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params;
+    if (req.body.isPromotional === true) {
+      await Event.updateMany({ isPromotional: true, _id: { $ne: id } }, { isPromotional: false });
+    }
     if (req.body.title) {
       let baseSlug = slugify(req.body.title, { lower: true, strict: true });
       let slug = baseSlug;

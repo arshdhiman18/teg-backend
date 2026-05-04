@@ -96,6 +96,10 @@ const eventSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    isPromotional: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
