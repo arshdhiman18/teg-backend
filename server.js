@@ -77,17 +77,31 @@ app.use((err, req, res, next) => {
 
 // Keep-alive self-ping — prevents Render free tier from spinning down after 15 min inactivity.
 // RENDER_EXTERNAL_URL is automatically injected by Render for web services.
+// Pings only between 8:00 AM and 10:00 PM IST (UTC+5:30); outside those hours the server can sleep.
 if (process.env.RENDER_EXTERNAL_URL) {
   const https = require('https');
   const PING_URL = `${process.env.RENDER_EXTERNAL_URL}/health`;
+
+  const isWithinActiveHours = () => {
+    const IST_OFFSET_MINUTES = 5 * 60 + 30; // UTC+5:30
+    const now = new Date();
+    const istMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + IST_OFFSET_MINUTES) % (24 * 60);
+    const istHour = Math.floor(istMinutes / 60);
+    return istHour >= 8 && istHour < 22; // 8:00 AM – 10:00 PM IST
+  };
+
   setInterval(() => {
+    if (!isWithinActiveHours()) {
+      console.log('💤 Keep-alive skipped — outside active hours (8 AM–10 PM IST)');
+      return;
+    }
     https.get(PING_URL, (res) => {
       console.log(`🏓 Keep-alive ping → ${res.statusCode}`);
     }).on('error', (err) => {
       console.error('Keep-alive ping failed:', err.message);
     });
   }, 14 * 60 * 1000); // every 14 minutes
-  console.log(`⏰ Keep-alive scheduled every 14 min → ${PING_URL}`);
+  console.log(`⏰ Keep-alive scheduled every 14 min (8 AM–10 PM IST) → ${PING_URL}`);
 }
 
 // Connect to MongoDB and start server
