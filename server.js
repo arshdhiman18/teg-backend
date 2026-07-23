@@ -12,6 +12,8 @@ const eventRoutes = require('./routes/events');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+console.log(`🔎 Build check: server booted at ${new Date().toISOString()} (keep-alive active-hours fix included)`);
+
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
